@@ -1,0 +1,9 @@
+{
+  "type": "record",
+  "name": "CountryRisk",
+  "namespace": "com.streaming.avro",
+  "fields": [
+    {"name":"country","type":"string"},
+    {"name":"risk_level","type":"string"}
+  ]
+}

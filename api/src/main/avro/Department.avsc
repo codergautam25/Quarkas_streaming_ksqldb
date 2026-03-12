@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "name": "Department",
+  "namespace": "com.streaming.avro",
+  "fields": [
+    {"name":"department_id","type":"string"},
+    {"name":"department_name","type":"string"},
+    {"name":"department_budget","type":"double"}
+  ]
+}

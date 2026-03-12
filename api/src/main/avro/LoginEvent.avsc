@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "LoginEvent",
+  "namespace": "com.streaming.avro",
+  "fields": [
+    {"name":"login_id","type":"string"},
+    {"name":"user_id","type":"string"},
+    {"name":"login_status","type":"string"},
+    {"name":"device","type":"string"},
+    {"name":"ip","type":"string"},
+    {"name":"login_time","type":"long"}
+  ]
+}

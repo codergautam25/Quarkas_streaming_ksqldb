@@ -1,0 +1,36 @@
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+!**/src/main/**
+!**/src/test/**
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Quarkus
+**/generated-sources/
+**/generated-test-sources/
+.quarkus/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.DS_Store
+
+# Docker volumes
+postgres-data/
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Sample output files
+sample_kafka_topic.txt
+sample_ksql_stream.txt
+
+# GSD methodology
+STATE.md
