@@ -235,18 +235,53 @@ curl http://localhost:8080/users/{userId}/fraud-activity
 ## 📋 Avro Schema Registry
 
 - **14 subjects** registered (value schemas for all topics + ksqlDB derived streams)
-- Compatible with **FORWARD**, **BACKWARD**, and **FULL** policies
-- Schema compatibility can be changed per-subject via the UI's Schema Registry panel or REST API:
+- Per-subject compatibility policy configurable via the demo UI or REST API
+
+### Schema Compatibility Modes
+
+| Mode | Can Readers of **old** schema read **new** messages? | Can Readers of **new** schema read **old** messages? | Use When |
+|---|---|---|---|
+| `BACKWARD` _(default)_ | ✅ No | ✅ Yes | Evolving consumers before producers |
+| `FORWARD` | ✅ Yes | ❌ No | Evolving producers before consumers |
+| `FULL` | ✅ Yes | ✅ Yes | Maximum flexibility, both directions |
+| `BACKWARD_TRANSITIVE` | ✅ All versions | ❌ No | Strict historical read compat |
+| `FORWARD_TRANSITIVE` | ❌ No | ✅ All versions | Strict forward compat across all history |
+| `FULL_TRANSITIVE` ⚠️ **STRICTEST** | ✅ All versions | ✅ All versions | Production — zero breaking changes ever |
+| `NONE` | ❌ | ❌ | Development only — no enforcement |
+
+### Rules Enforced (STRICT / FULL_TRANSITIVE)
+
+A schema change is **allowed** if:
+- ✅ Adding a field **with a default value**
+- ✅ Removing a field that **had a default value**
+
+A schema change is **rejected** if:
+- ❌ Removing a field with **no default** (breaks backward readers)
+- ❌ Adding a field with **no default** (breaks forward readers)
+- ❌ Changing a field's **type** (e.g. `string` → `long`)
+- ❌ Renaming a field without an **alias**
+
+### Setting Policy Per-Subject
 
 ```bash
 # View current schema
 curl http://localhost:8081/subjects/user-events-value/versions/latest | jq .
 
-# Change compatibility to FORWARD
+# Set FULL_TRANSITIVE (strictest — recommended for production)
 curl -X PUT http://localhost:8081/config/user-events-value \
   -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  -d '{"compatibility": "FULL_TRANSITIVE"}'
+
+# Set FORWARD (producers evolve first)
+curl -X PUT http://localhost:8081/config/login-events-value \
+  -H "Content-Type: application/vnd.schemaregistry.v1+json" \
   -d '{"compatibility": "FORWARD"}'
+
+# Check global default
+curl http://localhost:8081/config | jq .
 ```
+
+> 💡 The **Schema Registry panel** in `demo.html` lets you change any subject's compatibility mode live — select a subject, pick a mode from the dropdown, and click **Set Policy**.
 
 ---
 
@@ -278,9 +313,3 @@ docker exec broker kafka-console-consumer \
   3. 5M Event Generation
   4. Avro Schema Registry
   5. ksqlDB Query Execution
-
----
-
-## 🗂 License
-
-MIT — see [LICENSE](LICENSE)
