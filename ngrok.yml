@@ -1,0 +1,15 @@
+authtoken: YOUR_NGROK_AUTHTOKEN_HERE
+version: 2
+tunnels:
+  ui:
+    proto: http
+    addr: 8000
+    description: "Streaming Platform UI"
+  api:
+    proto: http
+    addr: 8080
+    description: "Quarkus REST API"
+  proxy:
+    proto: http
+    addr: 3001
+    description: "Kafka/Schema Proxy"

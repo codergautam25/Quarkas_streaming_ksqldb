@@ -100,6 +100,26 @@
         class="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]">
     </div>
 
+    <!-- Connection Settings Bar -->
+    <div
+        class="fixed top-0 left-0 right-0 z-50 p-2 bg-black/80 backdrop-blur-md border-b border-white/10 flex items-center justify-center gap-4 text-[10px] uppercase tracking-widest font-bold">
+        <div class="flex items-center gap-2">
+            <span class="text-gray-500">API:</span>
+            <input id="api-url-input" type="text"
+                class="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-cyan-400 focus:outline-none focus:border-cyan-400 w-48"
+                placeholder="http://localhost:8080">
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-gray-500">Proxy:</span>
+            <input id="proxy-url-input" type="text"
+                class="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-cyan-400 focus:outline-none focus:border-cyan-400 w-48"
+                placeholder="http://localhost:3001">
+        </div>
+        <button onclick="saveConnectionSettings()"
+            class="bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-0.5 rounded transition">Apply & Reload</button>
+        <div class="text-[9px] text-gray-600 normal-case italic">Required for ngrok access</div>
+    </div>
+
     <div class="relative z-10 w-full max-w-5xl">
         <header class="text-center mb-12">
             <h1 class="text-5xl font-bold text-white mb-4 glow-text">Streaming Platform Demo</h1>
@@ -855,8 +875,25 @@
             setTimeout(() => btn.innerText = '📋 Copy UUID', 1500);
         }
 
+        // Connection Settings
+        let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
+        let PROXY_URL = localStorage.getItem('PROXY_URL') || 'http://localhost:3001';
+
+        // Pre-fill inputs
+        window.addEventListener('load', () => {
+            document.getElementById('api-url-input').value = API_URL;
+            document.getElementById('proxy-url-input').value = PROXY_URL;
+        });
+
+        function saveConnectionSettings() {
+            const api = document.getElementById('api-url-input').value.trim();
+            const proxy = document.getElementById('proxy-url-input').value.trim();
+            if (api) localStorage.setItem('API_URL', api);
+            if (proxy) localStorage.setItem('PROXY_URL', proxy);
+            window.location.reload();
+        }
+
         // CRUD API Operations
-        const API_URL = 'http://localhost:8080';
 
         async function exeReq(resDiv, promise, method, endpoint) {
             const el = document.getElementById(resDiv);
@@ -945,7 +982,7 @@
         // =========================================
         // Topic Inspector & ksqlDB Query Functions
         // =========================================
-        const PROXY_URL = 'http://localhost:3001';
+
 
         // Sync command previews when inputs change
         document.addEventListener('DOMContentLoaded', () => {
