@@ -8,7 +8,7 @@ A production-grade, high-throughput event streaming platform built with **Apache
 
 ## 📸 Demo
 
-The platform ships with a fully interactive `demo.html` UI that includes:
+The platform ships with a fully interactive `index.html` UI that includes:
 
 - **Live Avro Feed** — real-time Kafka message ticker during generation
 - **ksqlDB SQL Editor** — free-form SQL with preset complex queries
@@ -73,7 +73,7 @@ streaming-platform/
 ├── docs/
 │   ├── ARCHITECTURE.md           # Component diagram (Mermaid)
 │   └── FLOWCHART.md              # 5 end-to-end flow diagrams
-├── demo.html                      # Interactive browser UI
+├── index.html                     # Interactive browser UI (landing page)
 ├── kafka-proxy.js                 # Node.js proxy (Schema Registry + Kafka consumer)
 ├── ksql-init.sql                  # All ksqlDB stream/table definitions
 ├── docker-compose.yml             # Full stack orchestration
@@ -135,7 +135,7 @@ This starts the proxy on **http://localhost:3001** exposing:
 
 ```bash
 python3 -m http.server 8000
-# Open http://localhost:8000/demo.html
+# Open http://localhost:8000/index.html (or just http://localhost:8000)
 ```
 
 ---
@@ -281,7 +281,7 @@ curl -X PUT http://localhost:8081/config/login-events-value \
 curl http://localhost:8081/config | jq .
 ```
 
-> 💡 The **Schema Registry panel** in `demo.html` lets you change any subject's compatibility mode live — select a subject, pick a mode from the dropdown, and click **Set Policy**.
+> 💡 The **Schema Registry panel** in `index.html` lets you change any subject's compatibility mode live — select a subject, pick a mode from the dropdown, and click **Set Policy**.
 
 ---
 

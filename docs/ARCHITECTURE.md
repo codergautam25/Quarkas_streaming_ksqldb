@@ -5,7 +5,7 @@
 ```mermaid
 graph TB
     subgraph CLIENT["🖥 Client Layer"]
-        UI["demo.html\n(Browser UI)"]
+        UI["index.html\n(Browser UI)"]
         PROXY["kafka-proxy.js\n(Node.js :3001)"]
     end
 
