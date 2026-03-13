@@ -21,8 +21,8 @@ function getKafkaMessages(topic, count = 5) {
                 --from-beginning \
                 --max-messages ${count} \
                 --property schema.registry.url=http://schema-registry:8081 \
-                --timeout-ms 3000 2>/dev/null | grep '^{'`;
-            const output = execSync(cmd, { timeout: 8000 }).toString().trim();
+                --timeout-ms 5000 2>/dev/null | grep '^{'`;
+            const output = execSync(cmd, { timeout: 15000 }).toString().trim();
             return output.split('\n').filter(l => l.startsWith('{')).map(line => {
                 try { return JSON.parse(line); } catch (e) { return { raw: line }; }
             });
@@ -33,8 +33,8 @@ function getKafkaMessages(topic, count = 5) {
                 --topic ${topic} \
                 --from-beginning \
                 --max-messages ${count} \
-                --timeout-ms 3000 2>/dev/null`;
-            const output = execSync(cmd, { timeout: 8000 }).toString().trim();
+                --timeout-ms 5000 2>/dev/null`;
+            const output = execSync(cmd, { timeout: 15000 }).toString().trim();
             return output.split('\n').filter(l => l.trim()).map((line, i) => ({
                 offset: i,
                 value: line.trim(),
@@ -54,7 +54,7 @@ function getKsqlMessages(customQuery) {
         }
         const safeQ = q.includes('LIMIT') ? q : q.replace(/;$/, '') + ' LIMIT 5;';
         const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 <<< "SET 'auto.offset.reset' = 'earliest'; ${safeQ}" 2>/dev/null`;
-        const output = execSync(cmd, { timeout: 12000, shell: '/bin/bash' }).toString();
+        const output = execSync(cmd, { timeout: 25000, shell: '/bin/bash' }).toString();
         const lines = output.split('\n').filter(l => l.includes('|') && !l.includes('-----'));
         let headers = [];
         const rows = [];
@@ -131,7 +131,7 @@ const server = http.createServer((req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, bypass-tunnel-reminder');
     res.setHeader('Content-Type', 'application/json');
 
     if (req.method === 'OPTIONS') { res.writeHead(204); res.end(); return; }
