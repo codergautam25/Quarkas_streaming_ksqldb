@@ -285,6 +285,25 @@ curl http://localhost:8081/config | jq .
 
 ---
 
+## 🌐 Public Sharing (Cloudflare Tunnels)
+
+For a clean, direct public demo (no splash screens or warnings), we use **Cloudflare Tunnels**.
+
+1.  **Install**: `brew install cloudflared`
+2.  **Launch Tunnels**:
+    ```bash
+    # Open 3 terminal tabs and run:
+    cloudflared tunnel --url http://localhost:8000
+    cloudflared tunnel --url http://localhost:8080
+    cloudflared tunnel --url http://localhost:3001
+    ```
+3.  **UI Configuration**:
+    - Open the public URL for port 8000.
+    - Copy/Paste the public URLs for port 8080 (API) and port 3001 (Proxy) into the top settings bar.
+    - Click **Apply & Reload**.
+
+---
+
 ## 🧪 Testing
 
 ```bash
