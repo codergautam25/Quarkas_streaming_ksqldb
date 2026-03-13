@@ -737,7 +737,7 @@
             document.getElementById('feed-topic-label').innerText = topic;
             document.getElementById('feed-loading').classList.remove('hidden');
             try {
-                const res = await fetch(`http://localhost:3001/topic-messages?topic=${topic}&count=5`);
+                const res = await fetch(`${PROXY_URL}/topic-messages?topic=${topic}&count=5`);
                 const data = await res.json();
                 document.getElementById('feed-loading').classList.add('hidden');
                 if (!data.messages || data.messages.length === 0) return;
@@ -782,7 +782,7 @@
 
             try {
                 // Call actual backend API
-                const response = await fetch('http://localhost:8080/api/generate', { method: 'POST' });
+                const response = await fetch(`${API_URL}/api/generate`, { method: 'POST' });
                 const text = await response.text();
 
                 statusMsg.innerText = text;
@@ -879,10 +879,10 @@
         let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
         let PROXY_URL = localStorage.getItem('PROXY_URL') || 'http://localhost:3001';
 
-        // Patch fetch to bypass localtunnel reminder page
+        // Patch fetch to bypass tunnel reminder pages
         const _origFetch = window.fetch;
         window.fetch = (url, options = {}) => {
-            if (typeof url === 'string' && (url.includes('.loca.lt') || url.includes('localhost'))) {
+            if (typeof url === 'string' && (url.includes('.loca.lt') || url.includes('.trycloudflare.com') || url.includes('localhost'))) {
                 options.headers = options.headers || {};
                 options.headers['bypass-tunnel-reminder'] = 'true';
             }

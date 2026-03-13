@@ -1,4 +1,3 @@
-authtoken: YOUR_NGROK_AUTHTOKEN_HERE
 version: 2
 tunnels:
   ui:
