@@ -879,10 +879,11 @@
         let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
         let PROXY_URL = localStorage.getItem('PROXY_URL') || 'http://localhost:3001';
 
-        // Patch fetch to bypass tunnel reminder pages
+        // Patch fetch to bypass localtunnel reminder page
         const _origFetch = window.fetch;
         window.fetch = (url, options = {}) => {
-            if (typeof url === 'string' && (url.includes('.loca.lt') || url.includes('.trycloudflare.com') || url.includes('localhost'))) {
+            // ONLY apply to localtunnel, Cloudflare and localhost don't need it
+            if (typeof url === 'string' && url.includes('.loca.lt')) {
                 options.headers = options.headers || {};
                 options.headers['bypass-tunnel-reminder'] = 'true';
             }
