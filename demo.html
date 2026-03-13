@@ -879,6 +879,16 @@
         let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
         let PROXY_URL = localStorage.getItem('PROXY_URL') || 'http://localhost:3001';
 
+        // Patch fetch to bypass localtunnel reminder page
+        const _origFetch = window.fetch;
+        window.fetch = (url, options = {}) => {
+            if (typeof url === 'string' && (url.includes('.loca.lt') || url.includes('localhost'))) {
+                options.headers = options.headers || {};
+                options.headers['bypass-tunnel-reminder'] = 'true';
+            }
+            return _origFetch(url, options);
+        };
+
         // Pre-fill inputs
         window.addEventListener('load', () => {
             document.getElementById('api-url-input').value = API_URL;
