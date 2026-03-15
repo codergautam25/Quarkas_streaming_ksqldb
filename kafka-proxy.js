@@ -54,8 +54,9 @@ async function getKsqlMessages(customQuery) {
         if (!q.toUpperCase().startsWith('SELECT')) {
             return { query: q, rows: [], error: 'Only SELECT queries are allowed.' };
         }
-        const safeQ = q.includes('LIMIT') ? q : q.replace(/;$/, '') + ' LIMIT 5;';
-        const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 -e "SET 'auto.offset.reset' = 'earliest'; ${safeQ}" 2>/dev/null`;
+        let safeQ = q.includes('LIMIT') ? q : q.replace(/;$/, '') + ' LIMIT 5;';
+        safeQ = safeQ.replace(/[\r\n]+/g, ' ');
+        const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 -e "SET 'auto.offset.reset' = 'earliest'; ${safeQ}"`;
         const { stdout } = await execAsync(cmd, { timeout: 25000, shell: '/bin/bash' });
         const lines = stdout.toString().split('\n').filter(l => l.includes('|') && !l.includes('-----'));
         let headers = [];
@@ -72,7 +73,11 @@ async function getKsqlMessages(customQuery) {
         });
         return { query: safeQ, rows };
     } catch (e) {
-        return { query: customQuery, rows: [], error: e.message };
+        let errMessage = e.message;
+        if (e.stdout && e.stdout.trim().length > 0) {
+            errMessage = e.stdout.trim().replace(/\u001b\[\d+m/g, '');
+        }
+        return { query: customQuery, rows: [], error: errMessage };
     }
 }
 
