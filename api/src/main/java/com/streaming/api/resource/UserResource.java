@@ -74,7 +74,7 @@ public class UserResource {
                 .setCreatedTimestamp(user.createdTimestamp)
                 .build();
         
-        userEmitter.send(avroUser);
+        userEmitter.send(avroUser).toCompletableFuture().join();
         return Response.ok(user).status(201).build();
     }
 
@@ -100,7 +100,7 @@ public class UserResource {
                 .setStatus(user.status)
                 .setCreatedTimestamp(user.createdTimestamp)
                 .build();
-        userEmitter.send(avroUser);
+        userEmitter.send(avroUser).toCompletableFuture().join();
         return Response.ok(user).build();
     }
 
@@ -124,7 +124,7 @@ public class UserResource {
                 .setStatus("DELETED")
                 .setCreatedTimestamp(Instant.now().toEpochMilli())
                 .build();
-        userEmitter.send(avroUser);
+        userEmitter.send(avroUser).toCompletableFuture().join();
         return Response.noContent().build();
     }
 
