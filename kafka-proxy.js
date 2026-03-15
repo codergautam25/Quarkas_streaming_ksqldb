@@ -12,7 +12,7 @@ const SCHEMA_REGISTRY = 'http://localhost:8081';
 // Topics that use plain String (not Avro)
 const STRING_TOPICS = ['fraud-alerts', 'fraud_alerts'];
 
-function getKafkaMessages(topic, count = 5) {
+async function getKafkaMessages(topic, count = 5) {
     try {
         const isAvro = !STRING_TOPICS.includes(topic);
         let cmd;
@@ -24,8 +24,8 @@ function getKafkaMessages(topic, count = 5) {
                 --max-messages ${count} \
                 --property schema.registry.url=http://schema-registry:8081 \
                 --timeout-ms 5000 2>/dev/null | grep '^{'`;
-            const output = execSync(cmd, { timeout: 15000 }).toString().trim();
-            return output.split('\n').filter(l => l.startsWith('{')).map(line => {
+            const { stdout } = await execAsync(cmd, { timeout: 15000 });
+            return stdout.toString().trim().split('\n').filter(l => l.startsWith('{')).map(line => {
                 try { return JSON.parse(line); } catch (e) { return { raw: line }; }
             });
         } else {
@@ -36,8 +36,8 @@ function getKafkaMessages(topic, count = 5) {
                 --from-beginning \
                 --max-messages ${count} \
                 --timeout-ms 5000 2>/dev/null`;
-            const output = execSync(cmd, { timeout: 15000 }).toString().trim();
-            return output.split('\n').filter(l => l.trim()).map((line, i) => ({
+            const { stdout } = await execAsync(cmd, { timeout: 15000 });
+            return stdout.toString().trim().split('\n').filter(l => l.trim()).map((line, i) => ({
                 offset: i,
                 value: line.trim(),
                 type: 'STRING'
@@ -81,11 +81,11 @@ async function getKsqlMessages(customQuery) {
     }
 }
 
-function getSchema(subject) {
+async function getSchema(subject) {
     try {
         const url = `${SCHEMA_REGISTRY}/subjects/${encodeURIComponent(subject)}/versions/latest`;
-        const out = execSync(`curl -s "${url}"`, { timeout: 5000 }).toString();
-        const parsed = JSON.parse(out);
+        const { stdout } = await execAsync(`curl -s "${url}"`, { timeout: 5000 });
+        const parsed = JSON.parse(stdout.toString());
         if (parsed.schema) {
             parsed.schemaParsed = JSON.parse(parsed.schema);
         }
@@ -95,35 +95,35 @@ function getSchema(subject) {
     }
 }
 
-function getCompatibility(subject) {
+async function getCompatibility(subject) {
     try {
         const url = `${SCHEMA_REGISTRY}/config/${encodeURIComponent(subject)}`;
-        const out = execSync(`curl -s "${url}"`, { timeout: 4000 }).toString();
-        return JSON.parse(out);
+        const { stdout } = await execAsync(`curl -s "${url}"`, { timeout: 4000 });
+        return JSON.parse(stdout.toString());
     } catch (e) {
         // fallback to global
         try {
-            const out = execSync(`curl -s "${SCHEMA_REGISTRY}/config"`, { timeout: 4000 }).toString();
-            return { ...JSON.parse(out), source: 'global' };
+            const { stdout } = await execAsync(`curl -s "${SCHEMA_REGISTRY}/config"`, { timeout: 4000 });
+            return { ...JSON.parse(stdout.toString()), source: 'global' };
         } catch (e2) { return { error: e2.message }; }
     }
 }
 
-function setCompatibility(subject, compatibility) {
+async function setCompatibility(subject, compatibility) {
     try {
         const url = `${SCHEMA_REGISTRY}/config/${encodeURIComponent(subject)}`;
         const body = JSON.stringify({ compatibility });
-        const out = execSync(`curl -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" -d '${body}' "${url}"`, { timeout: 6000 }).toString();
-        return JSON.parse(out);
+        const { stdout } = await execAsync(`curl -s -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" -d '${body}' "${url}"`, { timeout: 6000 });
+        return JSON.parse(stdout.toString());
     } catch (e) {
         return { error: e.message };
     }
 }
 
-function getAllSubjects() {
+async function getAllSubjects() {
     try {
-        const out = execSync(`curl -s "${SCHEMA_REGISTRY}/subjects"`, { timeout: 4000 }).toString();
-        const subjects = JSON.parse(out).filter(s => !s.startsWith('_'));
+        const { stdout } = await execAsync(`curl -s "${SCHEMA_REGISTRY}/subjects"`, { timeout: 4000 });
+        const subjects = JSON.parse(stdout.toString()).filter(s => !s.startsWith('_'));
         return subjects.map(s => ({
             subject: s,
             topic: s.replace('-value', '').replace('-key', ''),
@@ -134,7 +134,7 @@ function getAllSubjects() {
     }
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://localhost:${PORT}`);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT');
@@ -147,7 +147,7 @@ const server = http.createServer((req, res) => {
         const topic = url.searchParams.get('topic') || 'user-events';
         const count = parseInt(url.searchParams.get('count') || '5');
         const isAvro = !STRING_TOPICS.includes(topic);
-        const messages = getKafkaMessages(topic, count);
+        const messages = await getKafkaMessages(topic, count);
         res.end(JSON.stringify({ topic, count: messages.length, isAvro, messages }));
 
     } else if (url.pathname === '/ksql-query') {
@@ -161,20 +161,21 @@ const server = http.createServer((req, res) => {
 
     } else if (url.pathname === '/schema') {
         const subject = url.searchParams.get('subject') || 'user-events-value';
-        const schema = getSchema(subject);
-        const compat = getCompatibility(subject);
+        const schema = await getSchema(subject);
+        const compat = await getCompatibility(subject);
         res.end(JSON.stringify({ ...schema, compatibility: compat.compatibilityLevel || compat.compatibility || 'BACKWARD (global)' }));
 
     } else if (url.pathname === '/schema/subjects') {
-        res.end(JSON.stringify({ subjects: getAllSubjects() }));
+        const subjects = await getAllSubjects();
+        res.end(JSON.stringify({ subjects }));
 
     } else if (url.pathname === '/schema/compatibility' && req.method === 'POST') {
         let body = '';
         req.on('data', d => body += d);
-        req.on('end', () => {
+        req.on('end', async () => {
             try {
                 const { subject, compatibility } = JSON.parse(body);
-                const result = setCompatibility(subject, compatibility);
+                const result = await setCompatibility(subject, compatibility);
                 res.end(JSON.stringify(result));
             } catch (e) { res.end(JSON.stringify({ error: e.message })); }
         });
@@ -182,8 +183,8 @@ const server = http.createServer((req, res) => {
 
     } else if (url.pathname === '/topics') {
         try {
-            const out = execSync(`docker exec broker kafka-topics --bootstrap-server localhost:9092 --list 2>/dev/null`).toString().trim();
-            const topics = out.split('\n').filter(t => !t.startsWith('_') && t.trim());
+            const { stdout } = await execAsync(`docker exec broker kafka-topics --bootstrap-server localhost:9092 --list 2>/dev/null`);
+            const topics = stdout.toString().trim().split('\n').filter(t => !t.startsWith('_') && t.trim());
             res.end(JSON.stringify({ topics }));
         } catch (e) {
             res.end(JSON.stringify({ topics: ['user-events', 'login-events', 'department-events', 'country-risk-events', 'fraud-alerts'] }));
