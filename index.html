@@ -107,13 +107,13 @@
             <span class="text-gray-500">API:</span>
             <input id="api-url-input" type="text"
                 class="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-cyan-400 focus:outline-none focus:border-cyan-400 w-48"
-                placeholder="http://localhost:8080">
+                placeholder="https://qrk-api.loca.lt">
         </div>
         <div class="flex items-center gap-2">
             <span class="text-gray-500">Proxy:</span>
             <input id="proxy-url-input" type="text"
                 class="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-cyan-400 focus:outline-none focus:border-cyan-400 w-48"
-                placeholder="http://localhost:3001">
+                placeholder="https://qrk-prx.loca.lt">
         </div>
         <button onclick="saveConnectionSettings()"
             class="bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-0.5 rounded transition">Apply & Reload</button>
@@ -876,8 +876,8 @@
         }
 
         // Connection Settings
-        let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
-        let PROXY_URL = localStorage.getItem('PROXY_URL') || 'http://localhost:3001';
+        let API_URL = localStorage.getItem('API_URL') || 'https://qrk-api.loca.lt';
+        let PROXY_URL = localStorage.getItem('PROXY_URL') || 'https://qrk-prx.loca.lt';
 
         // Patch fetch to bypass localtunnel reminder page
         const _origFetch = window.fetch;

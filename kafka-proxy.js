@@ -53,7 +53,7 @@ function getKsqlMessages(customQuery) {
             return { query: q, rows: [], error: 'Only SELECT queries are allowed.' };
         }
         const safeQ = q.includes('LIMIT') ? q : q.replace(/;$/, '') + ' LIMIT 5;';
-        const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 <<< "SET 'auto.offset.reset' = 'earliest'; ${safeQ}" 2>/dev/null`;
+        const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 -e "SET 'auto.offset.reset' = 'earliest'; ${safeQ}" 2>/dev/null`;
         const output = execSync(cmd, { timeout: 25000, shell: '/bin/bash' }).toString();
         const lines = output.split('\n').filter(l => l.includes('|') && !l.includes('-----'));
         let headers = [];
