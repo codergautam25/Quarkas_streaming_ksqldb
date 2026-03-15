@@ -2,7 +2,9 @@
 // Kafka + Schema Registry Proxy — serves topic data and schema info to the browser
 // Usage: node kafka-proxy.js
 const http = require('http');
-const { execSync } = require('child_process');
+const { execSync, exec } = require('child_process');
+const util = require('util');
+const execAsync = util.promisify(exec);
 
 const PORT = 3001;
 const SCHEMA_REGISTRY = 'http://localhost:8081';
@@ -46,7 +48,7 @@ function getKafkaMessages(topic, count = 5) {
     }
 }
 
-function getKsqlMessages(customQuery) {
+async function getKsqlMessages(customQuery) {
     try {
         const q = customQuery.trim();
         if (!q.toUpperCase().startsWith('SELECT')) {
@@ -54,8 +56,8 @@ function getKsqlMessages(customQuery) {
         }
         const safeQ = q.includes('LIMIT') ? q : q.replace(/;$/, '') + ' LIMIT 5;';
         const cmd = `docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 -e "SET 'auto.offset.reset' = 'earliest'; ${safeQ}" 2>/dev/null`;
-        const output = execSync(cmd, { timeout: 25000, shell: '/bin/bash' }).toString();
-        const lines = output.split('\n').filter(l => l.includes('|') && !l.includes('-----'));
+        const { stdout } = await execAsync(cmd, { timeout: 25000, shell: '/bin/bash' });
+        const lines = stdout.toString().split('\n').filter(l => l.includes('|') && !l.includes('-----'));
         let headers = [];
         const rows = [];
         lines.forEach((line, i) => {
@@ -148,7 +150,9 @@ const server = http.createServer((req, res) => {
         const stream = url.searchParams.get('stream') || 'user_stream';
         const count = parseInt(url.searchParams.get('count') || '5');
         const query = customQ ? decodeURIComponent(customQ) : `SELECT * FROM ${stream} EMIT CHANGES LIMIT ${count};`;
-        res.end(JSON.stringify(getKsqlMessages(query)));
+        getKsqlMessages(query)
+            .then(data => res.end(JSON.stringify(data)))
+            .catch(err => res.end(JSON.stringify({ query, rows: [], error: err.message })));
 
     } else if (url.pathname === '/schema') {
         const subject = url.searchParams.get('subject') || 'user-events-value';
