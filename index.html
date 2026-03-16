@@ -107,7 +107,7 @@
             <span class="text-gray-500">API:</span>
             <input id="api-url-input" type="text"
                 class="bg-gray-900 border border-gray-700 rounded px-2 py-0.5 text-cyan-400 focus:outline-none focus:border-cyan-400 w-48"
-                placeholder="https://struck-latest-scholarship-jay.trycloudflare.com">
+                placeholder="https://qrk-api.loca.lt">
         </div>
         <div class="flex items-center gap-2">
             <span class="text-gray-500">Proxy:</span>
@@ -883,8 +883,8 @@
         if (API_URL && API_URL.includes('.loca.lt')) { API_URL = null; localStorage.removeItem('API_URL'); }
         if (PROXY_URL && PROXY_URL.includes('.loca.lt')) { PROXY_URL = null; localStorage.removeItem('PROXY_URL'); }
 
-        API_URL = API_URL || 'https://struck-latest-scholarship-jay.trycloudflare.com';
-        PROXY_URL = PROXY_URL || 'https://bundle-essentials-underlying-lot.trycloudflare.com';
+        API_URL = API_URL || 'https://qrk-api.loca.lt';
+        PROXY_URL = PROXY_URL || 'https://qrk-prx.loca.lt';
 
         // Patch fetch to bypass localtunnel reminder page
         const _origFetch = window.fetch;
