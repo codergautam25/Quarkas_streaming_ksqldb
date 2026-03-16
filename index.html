@@ -876,8 +876,15 @@
         }
 
         // Connection Settings
-        let API_URL = localStorage.getItem('API_URL') || 'https://struck-latest-scholarship-jay.trycloudflare.com';
-        let PROXY_URL = localStorage.getItem('PROXY_URL') || 'https://bundle-essentials-underlying-lot.trycloudflare.com';
+        let API_URL = localStorage.getItem('API_URL');
+        let PROXY_URL = localStorage.getItem('PROXY_URL');
+
+        // Auto-evict dead localtunnel caches
+        if (API_URL && API_URL.includes('.loca.lt')) { API_URL = null; localStorage.removeItem('API_URL'); }
+        if (PROXY_URL && PROXY_URL.includes('.loca.lt')) { PROXY_URL = null; localStorage.removeItem('PROXY_URL'); }
+
+        API_URL = API_URL || 'https://struck-latest-scholarship-jay.trycloudflare.com';
+        PROXY_URL = PROXY_URL || 'https://bundle-essentials-underlying-lot.trycloudflare.com';
 
         // Patch fetch to bypass localtunnel reminder page
         const _origFetch = window.fetch;
